@@ -22,8 +22,8 @@ class Config:
     LOG_LEVEL = 'INFO'
     
     # AWS Secrets Manager secret names
-    AWS_BOT_TOKEN_SECRET = "aws-secret-name"
-    AWS_SIGNING_SECRET_SECRET = "aws-secret-name"
+    AWS_BOT_TOKEN_SECRET = "bot_token_secret_name"
+    AWS_SIGNING_SECRET_SECRET = "signing_secret_name"
     
     @classmethod
     def get_bot_token(cls):
