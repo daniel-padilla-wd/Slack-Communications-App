@@ -2,8 +2,6 @@
 Checkbox action handlers for sender identity and call-to-action options.
 """
 from blocks import compose_modal_blocks
-from slack_sdk.errors import SlackApiError
-import time
 
 
 def register_checkbox_handlers(app, client):
@@ -57,46 +55,31 @@ def register_checkbox_handlers(app, client):
             num_cta_buttons=num_cta_buttons
         )
 
-        # Retry logic for hash conflicts in Lambda environment
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                # Get fresh view state on retries
-                current_hash = body["view"]["hash"] if attempt == 0 else ""
-                
-                client.views_update(
-                    view_id=body["view"]["id"],
-                    hash=current_hash,
-                    view={
-                        "private_metadata": "",
-                        "title": {
-                            "type": "plain_text",
-                            "text": "BT Comms App",
-                            "emoji": True
-                        },
-                        "submit": {
-                            "type": "plain_text",
-                            "text": "Submit",
-                            "emoji": True
-                        },
-                        "type": "modal",
-                        "close": {
-                            "type": "plain_text",
-                            "text": "Cancel",
-                            "emoji": True
-                        },
-                        "callback_id": "initial_view",
-                        "blocks": blocks
-                    }
-                )
-                break  # Success, exit retry loop
-            except SlackApiError as e:
-                if e.response["error"] == "hash_conflict" and attempt < max_retries - 1:
-                    logger.warning(f"Hash conflict on attempt {attempt + 1}, retrying without hash...")
-                    time.sleep(0.1 * (attempt + 1))  # Brief backoff
-                else:
-                    logger.error(f"Failed to update view: {e}")
-                    raise
+        client.views_update(
+            view_id=body["view"]["id"],
+            hash=body["view"]["hash"],
+            view={
+                "private_metadata": "",
+                "title": {
+                    "type": "plain_text",
+                    "text": "BT Comms App",
+                    "emoji": True
+                },
+                "submit": {
+                    "type": "plain_text",
+                    "text": "Submit",
+                    "emoji": True
+                },
+                "type": "modal",
+                "close": {
+                    "type": "plain_text",
+                    "text": "Cancel",
+                    "emoji": True
+                },
+                "callback_id": "initial_view",
+                "blocks": blocks
+            }
+        )
 
     @app.action("call_to_action-action")
     def handle_call_to_action_checkbox(ack, body, logger):
@@ -121,43 +104,28 @@ def register_checkbox_handlers(app, client):
             include_cta_dropdown=call_to_action_selected
         )
 
-        # Retry logic for hash conflicts in Lambda environment
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                # Get fresh view state on retries
-                current_hash = body["view"]["hash"] if attempt == 0 else ""
-                
-                client.views_update(
-                    view_id=body["view"]["id"],
-                    hash=current_hash,
-                    view={
-                        "private_metadata": "",
-                        "title": {
-                            "type": "plain_text",
-                            "text": "BT Comms App",
-                            "emoji": True
-                        },
-                        "submit": {
-                            "type": "plain_text",
-                            "text": "Submit",
-                            "emoji": True
-                        },
-                        "type": "modal",
-                        "close": {
-                            "type": "plain_text",
-                            "text": "Cancel",
-                            "emoji": True
-                        },
-                        "callback_id": "initial_view",
-                        "blocks": blocks
-                    }
-                )
-                break  # Success, exit retry loop
-            except SlackApiError as e:
-                if e.response["error"] == "hash_conflict" and attempt < max_retries - 1:
-                    logger.warning(f"Hash conflict on attempt {attempt + 1}, retrying without hash...")
-                    time.sleep(0.1 * (attempt + 1))  # Brief backoff
-                else:
-                    logger.error(f"Failed to update view: {e}")
-                    raise
+        client.views_update(
+            view_id=body["view"]["id"],
+            hash=body["view"]["hash"],
+            view={
+                "private_metadata": "",
+                "title": {
+                    "type": "plain_text",
+                    "text": "BT Comms App",
+                    "emoji": True
+                },
+                "submit": {
+                    "type": "plain_text",
+                    "text": "Submit",
+                    "emoji": True
+                },
+                "type": "modal",
+                "close": {
+                    "type": "plain_text",
+                    "text": "Cancel",
+                    "emoji": True
+                },
+                "callback_id": "initial_view",
+                "blocks": blocks
+            }
+        )
