@@ -2,6 +2,8 @@ from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from slack_bolt.adapter.aws_lambda import SlackRequestHandler
 from slack_sdk.web import WebClient
+#import logging
+#logging.basicConfig(level=logging.INFO)
 
 # Import configuration
 from config import Config, BOT_TOKEN, SIGNING_SECRET, APP_TOKEN, SSL_CONTEXT
@@ -19,7 +21,11 @@ Config.validate()
 client = WebClient(token=BOT_TOKEN, ssl=SSL_CONTEXT)
 
 # Initialize Slack Bolt app
-app = App(client=client, signing_secret=SIGNING_SECRET)
+# Signing secret only needed for Lambda/production (HTTP mode), not Socket Mode
+if Config.SANDBOX_MODE:
+    app = App(client=client)
+else:
+    app = App(client=client, signing_secret=SIGNING_SECRET)
 
 # Register all handlers
 modal_handlers.register_modal_handlers(app)
@@ -27,9 +33,6 @@ checkbox_handlers.register_checkbox_handlers(app, client)
 dropdown_handlers.register_dropdown_handlers(app, client)
 input_handlers.register_input_handlers(app)
 submission_handlers.register_submission_handlers(app, client)
-
-# AWS Lambda handler
-SlackRequestHandler.clear_all_log_handlers()
 
 def lambda_handler(event, context):
     """
@@ -42,6 +45,7 @@ def lambda_handler(event, context):
     Returns:
         Response dict with statusCode and body
     """
+    SlackRequestHandler.clear_all_log_handlers()
     slack_handler = SlackRequestHandler(app=app)
     return slack_handler.handle(event, context)
 
