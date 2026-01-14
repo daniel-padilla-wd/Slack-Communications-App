@@ -6,6 +6,9 @@ load_dotenv()
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from slack_sdk.web import WebClient
+from slack_bolt.adapter.aws_lambda import SlackRequestHandler
+from config import Config, BOT_TOKEN, SIGNING_SECRET, APP_TOKEN, SSL_CONTEXT
+
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -24,7 +27,8 @@ context.verify_flags &= ~ssl.VERIFY_X509_STRICT
 # Initialize the WebClient with the custom SSL context
 # This client will be used by the Bolt app for all API calls.
 client = WebClient(
-    token=os.getenv("S_BOT_TOKEN"),
+    #token=os.getenv("S_BOT_TOKEN"),
+    token=BOT_TOKEN,
     ssl=context
 )
 
@@ -672,6 +676,21 @@ def button_was_clicked(ack, body, logger):
 def multi_conversations_select_action(ack, body, logger):
     ack()
     logger.info(body)
+
+def lambda_handler(event, context):
+    """
+    AWS Lambda handler for Slack events.
+    
+    Args:
+        event: AWS Lambda event object containing Slack request
+        context: AWS Lambda context object
+        
+    Returns:
+        Response dict with statusCode and body
+    """
+    SlackRequestHandler.clear_all_log_handlers()
+    slack_handler = SlackRequestHandler(app=app)
+    return slack_handler.handle(event, context)
 
 # Start Bolt app
 if __name__ == "__main__":
