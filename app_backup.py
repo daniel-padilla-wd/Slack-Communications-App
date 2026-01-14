@@ -24,7 +24,7 @@ context.verify_flags &= ~ssl.VERIFY_X509_STRICT
 # Initialize the WebClient with the custom SSL context
 # This client will be used by the Bolt app for all API calls.
 client = WebClient(
-    token=os.getenv("SLACK_BOT_TOKEN"),
+    token=os.getenv("S_BOT_TOKEN"),
     ssl=context
 )
 
@@ -675,4 +675,4 @@ def multi_conversations_select_action(ack, body, logger):
 
 # Start Bolt app
 if __name__ == "__main__":
-    SocketModeHandler(app, os.getenv("SLACK_APP_TOKEN")).start()
+    SocketModeHandler(app, os.getenv("S_APP_TOKEN")).start()
