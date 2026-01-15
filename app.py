@@ -28,6 +28,7 @@ else:
     app = App(client=client, signing_secret=SIGNING_SECRET)
 
 # Register all handlers
+app.client.auth_test()  # Test authentication
 modal_handlers.register_modal_handlers(app)
 checkbox_handlers.register_checkbox_handlers(app, client)
 dropdown_handlers.register_dropdown_handlers(app, client)
@@ -45,7 +46,7 @@ def lambda_handler(event, context):
     Returns:
         Response dict with statusCode and body
     """
-    SlackRequestHandler.clear_all_log_handlers()
+    #SlackRequestHandler.clear_all_log_handlers()
     slack_handler = SlackRequestHandler(app=app)
     return slack_handler.handle(event, context)
 
