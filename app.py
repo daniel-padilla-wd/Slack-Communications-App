@@ -29,11 +29,11 @@ else:
 
 # Register all handlers
 app.client.auth_test()  # Test authentication
-modal_handlers.register_modal_handlers(app)
-checkbox_handlers.register_checkbox_handlers(app, client)
-dropdown_handlers.register_dropdown_handlers(app, client)
-input_handlers.register_input_handlers(app)
-submission_handlers.register_submission_handlers(app, client)
+#modal_handlers.register_modal_handlers(app)
+#checkbox_handlers.register_checkbox_handlers(app, client)
+#dropdown_handlers.register_dropdown_handlers(app, client)
+#input_handlers.register_input_handlers(app)
+#submission_handlers.register_submission_handlers(app, client)
 
 def lambda_handler(event, context):
     """
