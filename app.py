@@ -22,7 +22,7 @@ client = WebClient(token=BOT_TOKEN, ssl=SSL_CONTEXT)
 
 # Initialize Slack Bolt app
 # Signing secret only needed for Lambda/production (HTTP mode), not Socket Mode
-if Config.SANDBOX_MODE:
+if not Config.PRODUCTION:
     app = App(client=client)
 else:
     app = App(client=client, signing_secret=SIGNING_SECRET)

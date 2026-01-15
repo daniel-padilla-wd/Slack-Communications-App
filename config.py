@@ -12,7 +12,12 @@ class Config:
     """Configuration class for managing environment variables and settings."""
     
     # Environment detection
-    SANDBOX_MODE = True
+    PRODUCTION = False
+    SIGNING_SECRET = os.getenv("SIGNING_SECRET")
+    S_BOT_TOKEN = os.getenv("S_BOT_TOKEN")
+    S_APP_TOKEN = os.getenv("S_APP_TOKEN")
+
+
     IS_AWS_LAMBDA = (
         os.getenv('AWS_LAMBDA_FUNCTION_NAME') is not None or 
         os.getenv('AWS_EXECUTION_ENV') is not None
@@ -28,28 +33,22 @@ class Config:
     @classmethod
     def get_bot_token(cls):
         """Get bot token based on environment."""
-        if not cls.SANDBOX_MODE and cls.IS_AWS_LAMBDA:
-            logging.info("Retrieving BOT_TOKEN from AWS Secrets Manager.")
-            return get_secret_string(cls.AWS_BOT_TOKEN_SECRET)
-        logging.info("Using BOT_TOKEN from environment variable.")
-        return os.getenv("S_BOT_TOKEN")
+        if not cls.PRODUCTION and not cls.IS_AWS_LAMBDA:
+            return cls.S_BOT_TOKEN
+        return get_secret_string(cls.AWS_BOT_TOKEN_SECRET)
     
     @classmethod
     def get_signing_secret(cls):
         """Get signing secret based on environment."""
-        if not cls.SANDBOX_MODE and cls.IS_AWS_LAMBDA:
-            logging.info("Retrieving SIGNING_SECRET from AWS Secrets Manager.")
-            return get_secret_string(cls.AWS_SIGNING_SECRET_SECRET)
-        logging.info("Using SIGNING_SECRET from environment variable.")
-        return os.getenv("SIGNING_SECRET")
+        if not cls.PRODUCTION and not cls.IS_AWS_LAMBDA:
+            return cls.SIGNING_SECRET
+        return get_secret_string(cls.AWS_SIGNING_SECRET_SECRET)
     
     @classmethod
     def get_app_token(cls):
         """Get app token for Socket Mode (local development only)."""
-        if cls.SANDBOX_MODE or not cls.IS_AWS_LAMBDA:
-            logging.info("Using S_APP_TOKEN for Socket Mode in sandbox/local development.")
-            return os.getenv("S_APP_TOKEN")
-        logging.info("APP_TOKEN not required in production/Lambda environment.")
+        if not cls.PRODUCTION or not cls.IS_AWS_LAMBDA:
+            return cls.S_APP_TOKEN
         return None
     
     @classmethod
@@ -61,13 +60,11 @@ class Config:
         Returns:
             ssl.SSLContext or None: Custom SSL context for sandbox, None for production
         """
-        if cls.SANDBOX_MODE:
+        if not cls.PRODUCTION:
             ca_file_path = certifi.where()
             context = ssl.create_default_context(cafile=ca_file_path)
             context.verify_flags &= ~ssl.VERIFY_X509_STRICT
-            logging.info("Custom SSL context created for sandbox development.")
             return context
-        logging.info("Using default SSL context for production/Lambda.")
         return None
     
     @classmethod
@@ -91,11 +88,11 @@ class Config:
         
         if not bot_token:
             raise ValueError("BOT_TOKEN is required but not configured")
-        if not cls.SANDBOX_MODE and not signing_secret:
+        if not cls.PRODUCTION and not signing_secret:
             raise ValueError("SIGNING_SECRET is required but not configured")
         
         # App token only required in sandbox mode
-        if cls.SANDBOX_MODE and not cls.get_app_token():
+        if cls.PRODUCTION and not cls.get_app_token():
             raise ValueError("S_APP_TOKEN is required for Socket Mode in sandbox")
         
         return True

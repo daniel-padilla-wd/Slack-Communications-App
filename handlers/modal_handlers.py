@@ -11,7 +11,7 @@ def register_modal_handlers(app):
     def open_modal(ack, body, client, logger, shortcut):
         # Acknowledge the shortcut request
         ack()
-        logger.info(body)
+        # logger.info(body)
         modal_view = compose_modal_blocks()
         # Call the views_open method using the built-in WebClient
         client.views_open(

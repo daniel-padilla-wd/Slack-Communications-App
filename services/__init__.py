@@ -37,7 +37,7 @@ def generate_cta_button_elements(view, number_of_buttons, logger):
                 ]
             }
             elements.append(button)
-        logger.info(f"\nHere are the generated CTA elements: {elements}\n")
+        # logger.info(f"\nHere are the generated CTA elements: {elements}\n")
         return elements
     except Exception as e:
         logger.error(f"Error generating CTA button elements: {e}")
@@ -92,8 +92,8 @@ def send_message_to_conversation(client, conversation_id, blocks, logger, sender
     if icon_url:
         message_payload["icon_url"] = icon_url
     if cta_elements:
-        logger.info(f"\nCTA ELEMENTS TO BE ADDED: {cta_elements}\n")
+        # logger.info(f"\nCTA ELEMENTS TO BE ADDED: {cta_elements}\n")
         message_payload["blocks"] = [*blocks, *cta_elements]
 
-    logger.info(f"\nMESSAGE PAYLOAD TO BE SENT: {message_payload}\n")
+    # logger.info(f"\nMESSAGE PAYLOAD TO BE SENT: {message_payload}\n")
     client.chat_postMessage(**message_payload)
