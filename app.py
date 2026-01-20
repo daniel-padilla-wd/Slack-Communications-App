@@ -15,25 +15,34 @@ from handlers import modal_handlers, checkbox_handlers, dropdown_handlers, input
 Config.setup_logging()
 
 # Validate configuration
-Config.validate()
+# Config.validate()
 
 # Initialize the WebClient with the custom SSL context
-client = WebClient(token=BOT_TOKEN, ssl=SSL_CONTEXT)
+#client = WebClient(token=BOT_TOKEN, ssl=SSL_CONTEXT)
 
 # Initialize Slack Bolt app
 # Signing secret only needed for Lambda/production (HTTP mode), not Socket Mode
+"""
 if not Config.PRODUCTION:
     app = App(client=client)
 else:
     app = App(client=client, signing_secret=SIGNING_SECRET)
+"""
+app = App(
+    #token=BOT_TOKEN,
+    signing_secret=SIGNING_SECRET,
+    process_before_response=True,
+    client=WebClient(token=BOT_TOKEN, ssl=SSL_CONTEXT)
+)
 
 # Register all handlers
-app.client.auth_test()  # Test authentication
-#modal_handlers.register_modal_handlers(app)
-#checkbox_handlers.register_checkbox_handlers(app, client)
-#dropdown_handlers.register_dropdown_handlers(app, client)
-#input_handlers.register_input_handlers(app)
-#submission_handlers.register_submission_handlers(app, client)
+resp = app.client.auth_test()  # Test authentication
+print(resp)
+modal_handlers.register_modal_handlers(app)
+checkbox_handlers.register_checkbox_handlers(app)
+dropdown_handlers.register_dropdown_handlers(app)
+input_handlers.register_input_handlers(app)
+submission_handlers.register_submission_handlers(app)
 
 def lambda_handler(event, context):
     """
@@ -46,7 +55,6 @@ def lambda_handler(event, context):
     Returns:
         Response dict with statusCode and body
     """
-    #SlackRequestHandler.clear_all_log_handlers()
     slack_handler = SlackRequestHandler(app=app)
     return slack_handler.handle(event, context)
 

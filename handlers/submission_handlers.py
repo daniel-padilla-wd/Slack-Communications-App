@@ -5,43 +5,95 @@ import validators
 import logging
 from services import generate_cta_button_elements, customize_sender_identity_state, send_message_to_conversation
 
+def validate_icon_url(ack, view_state: dict) -> bool:
+    try:
+        if not view_state.get("icon_url"):
+            return True  # No URL provided, so no validation needed
+        if not view_state["icon_url"]["icon_url-input-action"].get("value"):
+            return True  # No URL provided, so no validation needed
+        icon_url_value: str = view_state["icon_url"]["icon_url-input-action"]["value"].strip()
+        if not validators.url(icon_url_value):
+            # If validation fails, return an error payload
+            ack(response_action="errors", errors={
+                f"icon_url": "Please enter a valid URL that starts with http:// or https://"
+            })
+            return False
+    except Exception as e:
+        logging.warning(f"\n Exception occurred during icon URL validation: {e}\n")
+        return False
+    return True
 
-def register_submission_handlers(app, client):
+def validate_cta_button_links(ack, view_state: dict) -> bool:
+    try: 
+        if not view_state.get("call_to_action_dropdown"):
+            return True  # No CTA buttons selected, so no validation needed
+        if not view_state["call_to_action_dropdown"]["call_to_action_dropdown-action"].get("selected_option"):
+            return True  # No CTA buttons selected, so no validation needed
+        
+        number_of_buttons_selected: int = int(view_state["call_to_action_dropdown"]["call_to_action_dropdown-action"]["selected_option"]["value"])
+        for i in range(number_of_buttons_selected):
+            button_link_value = view_state[f"cta_button_link_{i+1}"]["cta_button_link_input-action"]["value"].strip()
+            if not validators.url(button_link_value):
+                # If validation fails, return an error payload
+                ack(response_action="errors", errors={
+                    f"cta_button_link_{i+1}": "Please enter a valid URL that starts with http:// or https://"
+                })
+                return
+    except Exception as e:
+        logging.warning(f"\n Exception occurred during CTA button link validation: {e}\n")
+        return False
+    return True
+    
+
+
+def register_submission_handlers(app):
     """Register all submission-related handlers."""
     
     @app.view("initial_view")
-    def handle_comms_submission_event(ack, body, logger, view):
-        # logger.info(body)
+    def handle_comms_submission_event(ack, body, client, logger, view):
         rich_text_input_value: str = view["state"]["values"]["rich_text_input"]["rich_text_input-action"]["rich_text_value"]
+        logger.info(body)
 
         try:
             # Validate conversation_select_block
             multi_conversations_selected: list = view["state"]["values"]["conversation_select_block"]["conversation_select_action"]["selected_conversations"]
             if not multi_conversations_selected:
-                # logging.info("\nNO CONVERSATIONS SELECTED\n")
                 ack(response_action="errors", errors={
                     "conversation_select_block": "Please select at least one conversation to send the message to."
                 })
                 return
             
+            # Valid user icon url 
+            """
+            logger.info(f'\n view["state"]["values"]["icon_url"]= {view["state"]["values"].get("icon_url", None)}\n')
+            icon_url_value: str = view["state"]["values"]["icon_url"]["icon_url-action"]["value"].strip()
+            if not validators.url(icon_url_value):
+                # If validation fails, return an error payload
+                ack(response_action="errors", errors={
+                    f"icon_url": "Please enter a valid URL that starts with http:// or https://"
+                })
+                return
+
+            """
+            if not validate_icon_url(ack, view["state"]["values"]):
+                return
+            
             # Validate CTA button links
+            """
             number_of_buttons_selected: int = int(view["state"]["values"]["call_to_action_dropdown"]["call_to_action_dropdown-action"]["selected_option"]["value"])
-            # logger.info(f"\nNUMBER OF BUTTONS SELECTED: {number_of_buttons_selected}\n")
             for i in range(number_of_buttons_selected):
                 button_link_value = view["state"]["values"][f"cta_button_link_{i+1}"]["cta_button_link_input-action"]["value"].strip()
-                # logging.info(f"\nVALIDATING BUTTON LINK {i+1}: {button_link_value}\n")
-                # logging.info(f"\nSTARTS WITH HTTP: {button_link_value.startswith('http://')}\n")
-                # logging.info(f"\nSTARTS WITH HTTPS: {button_link_value.startswith('https://')}\n")
-                if validators.url(button_link_value):
-                    pass
-                else:
+                if not validators.url(button_link_value):
                     # If validation fails, return an error payload
-                    # logging.info(f"\nINVALID URL DETECTED FOR BUTTON LINK {i+1}: {button_link_value}\n")
                     ack(response_action="errors", errors={
                         f"cta_button_link_{i+1}": "Please enter a valid URL that starts with http:// or https://"
                     })
                     return
+            """
+            if not validate_cta_button_links(ack, view["state"]["values"]):
+                return
             ack()
+            number_of_buttons_selected: int = int(view["state"]["values"]["call_to_action_dropdown"]["call_to_action_dropdown-action"]["selected_option"]["value"])
             buttons = generate_cta_button_elements(view, number_of_buttons_selected, logger)
         except Exception as e:
             logging.warning(f"\n Exception occurred: {e}\n")
