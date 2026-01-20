@@ -64,32 +64,10 @@ def register_submission_handlers(app):
                 return
             
             # Valid user icon url 
-            """
-            logger.info(f'\n view["state"]["values"]["icon_url"]= {view["state"]["values"].get("icon_url", None)}\n')
-            icon_url_value: str = view["state"]["values"]["icon_url"]["icon_url-action"]["value"].strip()
-            if not validators.url(icon_url_value):
-                # If validation fails, return an error payload
-                ack(response_action="errors", errors={
-                    f"icon_url": "Please enter a valid URL that starts with http:// or https://"
-                })
-                return
-
-            """
             if not validate_icon_url(ack, view["state"]["values"]):
                 return
             
             # Validate CTA button links
-            """
-            number_of_buttons_selected: int = int(view["state"]["values"]["call_to_action_dropdown"]["call_to_action_dropdown-action"]["selected_option"]["value"])
-            for i in range(number_of_buttons_selected):
-                button_link_value = view["state"]["values"][f"cta_button_link_{i+1}"]["cta_button_link_input-action"]["value"].strip()
-                if not validators.url(button_link_value):
-                    # If validation fails, return an error payload
-                    ack(response_action="errors", errors={
-                        f"cta_button_link_{i+1}": "Please enter a valid URL that starts with http:// or https://"
-                    })
-                    return
-            """
             if not validate_cta_button_links(ack, view["state"]["values"]):
                 return
             ack()
