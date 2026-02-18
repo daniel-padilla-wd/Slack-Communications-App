@@ -36,8 +36,6 @@ app = App(
 )
 
 # Register all handlers
-resp = app.client.auth_test()  # Test authentication
-print(resp)
 modal_handlers.register_modal_handlers(app)
 checkbox_handlers.register_checkbox_handlers(app)
 dropdown_handlers.register_dropdown_handlers(app)

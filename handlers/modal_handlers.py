@@ -10,6 +10,7 @@ def register_modal_handlers(app):
     @app.shortcut("bt_comms_shortcut")
     def open_modal(ack, body, client, logger, shortcut):
         ack()
+        logger.info(f"Payload recieved:\n{body}")
         modal_view = compose_modal_blocks()
         client.views_open(
             trigger_id=shortcut["trigger_id"],

@@ -10,6 +10,7 @@ def register_dropdown_handlers(app):
     @app.action("call_to_action_dropdown-action")
     def handle_call_to_action_dropdown_action(ack, client, body, logger):
         ack()
+        logger.info(f"Payload recieved:\n{body}")
         # call_to_action_dropdown_selected = body["actions"][0]["selected_option"]
         call_to_action_requested_buttons = body["actions"][0]["selected_option"]["value"]
         customize_sender_identity_selected = bool(body["view"]["state"]["values"]["customize_sender_identity"]["customize_sender_identity-action"].get("selected_options", []))

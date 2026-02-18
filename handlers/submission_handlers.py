@@ -6,12 +6,13 @@ import logging
 from services import generate_cta_button_elements, customize_sender_identity_state, send_message_to_conversation
 
 def validate_icon_url(ack, view_state: dict) -> bool:
+    logging.info(f"Validating icon URL with view state:\n{view_state}")
     try:
         if not view_state.get("icon_url"):
             return True  # No URL provided, so no validation needed
-        if not view_state["icon_url"]["icon_url-input-action"].get("value"):
+        if not view_state["icon_url"]["icon_url-action"].get("value"):
             return True  # No URL provided, so no validation needed
-        icon_url_value: str = view_state["icon_url"]["icon_url-input-action"]["value"].strip()
+        icon_url_value: str = view_state["icon_url"]["icon_url-action"]["value"].strip()
         if not validators.url(icon_url_value):
             # If validation fails, return an error payload
             ack(response_action="errors", errors={
@@ -25,12 +26,17 @@ def validate_icon_url(ack, view_state: dict) -> bool:
 
 def validate_cta_button_links(ack, view_state: dict) -> bool:
     try: 
-        if not view_state.get("call_to_action_dropdown"):
+        if not view_state.get("call_to_action"):
+            return True  # No CTA buttons selected, so no validation needed
+        if not view_state["call_to_action"]["call_to_action-action"].get("selected_options"):
             return True  # No CTA buttons selected, so no validation needed
         if not view_state["call_to_action_dropdown"]["call_to_action_dropdown-action"].get("selected_option"):
-            return True  # No CTA buttons selected, so no validation needed
+            ack(response_action="errors", errors={
+                "conversation_select_block": "Call to action is selected. Please select at least one call to action button."
+            })
+            return
         
-        number_of_buttons_selected: int = int(view_state["call_to_action_dropdown"]["call_to_action_dropdown-action"]["selected_option"]["value"])
+        number_of_buttons_selected: int = len(view_state["call_to_action_dropdown"]["call_to_action_dropdown-action"]["selected_option"]["value"])
         for i in range(number_of_buttons_selected):
             button_link_value = view_state[f"cta_button_link_{i+1}"]["cta_button_link_input-action"]["value"].strip()
             if not validators.url(button_link_value):
@@ -51,9 +57,8 @@ def register_submission_handlers(app):
     
     @app.view("initial_view")
     def handle_comms_submission_event(ack, body, client, logger, view):
-        rich_text_input_value: str = view["state"]["values"]["rich_text_input"]["rich_text_input-action"]["rich_text_value"]
-        logger.info(body)
-
+        logger.info(f"Payload recieved:\n{body}")
+        # rich_text_input_value: str = view["state"]["values"]["rich_text_input"]["rich_text_input-action"]["rich_text_value"]
         try:
             # Validate conversation_select_block
             multi_conversations_selected: list = view["state"]["values"]["conversation_select_block"]["conversation_select_action"]["selected_conversations"]
@@ -71,14 +76,22 @@ def register_submission_handlers(app):
             if not validate_cta_button_links(ack, view["state"]["values"]):
                 return
             ack()
-            number_of_buttons_selected: int = int(view["state"]["values"]["call_to_action_dropdown"]["call_to_action_dropdown-action"]["selected_option"]["value"])
-            buttons = generate_cta_button_elements(view, number_of_buttons_selected, logger)
+            #number_of_buttons_selected: int = int(view["state"]["values"]["call_to_action_dropdown"]["call_to_action_dropdown-action"]["selected_option"]["value"])
+            #buttons = generate_cta_button_elements(view, number_of_buttons_selected, logger)
         except Exception as e:
-            logging.warning(f"\n Exception occurred: {e}\n")
+            logging.warning(f"\n Exception occurred within handle_comms_submission_event: {e}\n")
             ack()
             buttons = None
+
+       
+        number_of_buttons_selected: int = int(view["state"]["values"]["call_to_action_dropdown"]["call_to_action_dropdown-action"]["selected_option"]["value"])
+        buttons = generate_cta_button_elements(view, number_of_buttons_selected, logger)
+        
+
         
         # Main Logic
+        #logging.info(f"====These are the buttons:====\n Number of buttons {number_of_buttons_selected} \n{buttons}")
+        rich_text_input_value: str = view["state"]["values"]["rich_text_input"]["rich_text_input-action"]["rich_text_value"]
         sender_identity = customize_sender_identity_state(view)
         if sender_identity is not None:
             for conversation_id in multi_conversations_selected:
