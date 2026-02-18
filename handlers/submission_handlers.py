@@ -30,6 +30,7 @@ def validate_cta_button_links(ack, view_state: dict) -> bool:
             return True  # No CTA buttons selected, so no validation needed
         if not view_state["call_to_action"]["call_to_action-action"].get("selected_options"):
             return True  # No CTA buttons selected, so no validation needed
+        # Added this
         if not view_state["call_to_action_dropdown"]["call_to_action_dropdown-action"].get("selected_option"):
             ack(response_action="errors", errors={
                 "conversation_select_block": "Call to action is selected. Please select at least one call to action button."
@@ -83,11 +84,8 @@ def register_submission_handlers(app):
             ack()
             buttons = None
 
-       
         number_of_buttons_selected: int = int(view["state"]["values"]["call_to_action_dropdown"]["call_to_action_dropdown-action"]["selected_option"]["value"])
         buttons = generate_cta_button_elements(view, number_of_buttons_selected, logger)
-        
-
         
         # Main Logic
         #logging.info(f"====These are the buttons:====\n Number of buttons {number_of_buttons_selected} \n{buttons}")
