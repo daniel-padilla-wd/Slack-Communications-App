@@ -16,6 +16,11 @@ class Config:
     SIGNING_SECRET = os.getenv("SIGNING_SECRET")
     S_BOT_TOKEN = os.getenv("S_BOT_TOKEN")
     S_APP_TOKEN = os.getenv("S_APP_TOKEN")
+    ALLOWED_SHORTCUT_USER_IDS = [
+        user_id.strip()
+        for user_id in os.getenv("ALLOWED_SHORTCUT_USER_IDS", "").split(",")
+        if user_id.strip()
+    ]
 
     
     # Logging configuration
