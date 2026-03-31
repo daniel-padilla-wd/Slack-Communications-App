@@ -3,6 +3,17 @@ Block Kit templates and composition utilities.
 """
 import copy
 
+unauthorized_access_block = [
+    {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": "\n:no_entry: You are not authorized to use this shortcut."
+        }
+    }
+]
+    
+
 # Initial view blocks
 initial_view_blocks = [
     {
