@@ -2,7 +2,8 @@
 #pytest
 #flake8
 #black
-slack-bolt
+slack_bolt
+slack_sdk
 python-dotenv
 certifi
 validators

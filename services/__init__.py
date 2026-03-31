@@ -1,7 +1,7 @@
 """
 Business logic services for message processing and CTA handling.
 """
-
+from slack_sdk.errors import SlackApiError
 
 def generate_cta_button_elements(view, number_of_buttons, logger):
     """
@@ -68,7 +68,7 @@ def customize_sender_identity_state(view):
     return None
 
 
-def send_message_to_conversation(client, conversation_id, blocks, logger, sender_name=None, icon_url=None, cta_elements=None):
+def send_message_to_conversation(client, conversation_id, blocks, logger, caller_user_id, sender_name=None, icon_url=None, cta_elements=None):
     """
     Send a message to a Slack conversation.
     
@@ -77,6 +77,7 @@ def send_message_to_conversation(client, conversation_id, blocks, logger, sender
         conversation_id: ID of the conversation to send to
         blocks: Message blocks to send
         logger: Logger instance
+        caller_user_id: user.id of the user who invoked the shortcut
         sender_name: Optional custom sender name
         icon_url: Optional custom icon URL
         cta_elements: Optional list of CTA button elements
@@ -96,4 +97,12 @@ def send_message_to_conversation(client, conversation_id, blocks, logger, sender
         message_payload["blocks"] = [*blocks, *cta_elements]
 
     # logger.info(f"\nMESSAGE PAYLOAD TO BE SENT: {message_payload}\n")
-    client.chat_postMessage(**message_payload)
+    try:
+        client.chat_postMessage(**message_payload)
+    except SlackApiError as e:
+        logger.error(f"Error sending message to conversation {conversation_id}: {e}")
+        client.chat_postMessage(
+            channel=caller_user_id,
+            text=f":warning: Failed to send message to <#{conversation_id}>. Ensure that the app is added to the channel's workspace and is approved for the workspace, or if the channel is private, add the app to the channel.\n Error details for INC: {e.response['error']}"
+        )
+        return

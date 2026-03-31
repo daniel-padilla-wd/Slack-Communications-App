@@ -100,6 +100,7 @@ def register_submission_handlers(app):
                     conversation_id=conversation_id,
                     blocks=[rich_text_input_value],
                     logger=logger,
+                    caller_user_id = body["user"]["id"],
                     sender_name=sender_identity["sender_name"],
                     icon_url=sender_identity["icon_url"],
                     cta_elements=buttons
@@ -111,5 +112,6 @@ def register_submission_handlers(app):
                     conversation_id=conversation_id,
                     blocks=[rich_text_input_value],
                     logger=logger,
+                    caller_user_id = body["user"]["id"],
                     cta_elements=buttons
                 )
