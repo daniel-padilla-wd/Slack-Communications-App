@@ -2,6 +2,7 @@
 Modal handlers for opening and managing modals.
 """
 from blocks import compose_modal_blocks
+from blocks import unauthorized_access_block
 from config import Config
 
 
@@ -42,15 +43,7 @@ def register_modal_handlers(app):
                     "type": "plain_text",
                     "text": "Close"
                 },
-                "blocks": [
-                    {
-                        "type": "section",
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": "\n:no_entry: You are not authorized to use this shortcut."
-                        }
-                    }
-                ]
+                "blocks": unauthorized_access_block
             }
         )
         logger.warning("Unauthorized shortcut access for user_id=%s", user_id)
