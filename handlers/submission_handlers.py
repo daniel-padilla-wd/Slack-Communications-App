@@ -82,10 +82,12 @@ def register_submission_handlers(app):
         except Exception as e:
             logging.warning(f"\n Exception occurred within handle_comms_submission_event: {e}\n")
             ack()
-            buttons = None
 
-        number_of_buttons_selected: int = int(view["state"]["values"]["call_to_action_dropdown"]["call_to_action_dropdown-action"]["selected_option"]["value"])
-        buttons = generate_cta_button_elements(view, number_of_buttons_selected, logger)
+        if view["state"]["values"].get("call_to_action_dropdown"):
+            number_of_buttons_selected: int = int(view["state"]["values"]["call_to_action_dropdown"]["call_to_action_dropdown-action"]["selected_option"]["value"])
+            buttons = generate_cta_button_elements(view, number_of_buttons_selected, logger)
+        else:
+            buttons = None
         
         # Main Logic
         #logging.info(f"====These are the buttons:====\n Number of buttons {number_of_buttons_selected} \n{buttons}")
