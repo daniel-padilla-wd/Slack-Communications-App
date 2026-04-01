@@ -10,10 +10,10 @@ load_dotenv()
 
 class Config:
     """Configuration class for managing environment variables and settings."""
-    
     # Environment detection
     PRODUCTION = False
-    SIGNING_SECRET = os.getenv("SIGNING_SECRET")
+
+    S_SIGNING_SECRET = os.getenv("S_SIGNING_SECRET")
     S_BOT_TOKEN = os.getenv("S_BOT_TOKEN")
     S_APP_TOKEN = os.getenv("S_APP_TOKEN")
     ALLOWED_SHORTCUT_USER_IDS = [
@@ -22,13 +22,13 @@ class Config:
         if user_id.strip()
     ]
 
-    
     # Logging configuration
     LOG_LEVEL = 'DEBUG'
     
     # AWS Secrets Manager secret names
     AWS_BOT_TOKEN_SECRET = "bot_token_secret_name"
     AWS_SIGNING_SECRET_SECRET = "signing_secret_name"
+    AWS_APP_TOKEN_SECRET = "app_token_secret_name"
     
     @classmethod
     def get_bot_token(cls):
@@ -41,7 +41,7 @@ class Config:
     def get_signing_secret(cls):
         """Get signing secret based on environment."""
         if not cls.PRODUCTION:
-            return cls.SIGNING_SECRET
+            return cls.S_SIGNING_SECRET
         return get_secret_string(cls.AWS_SIGNING_SECRET_SECRET)
     
     @classmethod
@@ -49,7 +49,7 @@ class Config:
         """Get app token for Socket Mode (local development only)."""
         if not cls.PRODUCTION:
             return cls.S_APP_TOKEN
-        return None
+        return get_secret_string(cls.AWS_APP_TOKEN_SECRET)
     
     @classmethod
     def get_ssl_context(cls):
@@ -74,28 +74,6 @@ class Config:
             format="%(asctime)s [%(levelname)s] %(message)s",
             level=getattr(logging, cls.LOG_LEVEL)
         )
-    
-    @classmethod
-    def validate(cls):
-        """
-        Validate that required configuration is present.
-        
-        Raises:
-            ValueError: If required configuration is missing
-        """
-        bot_token = cls.get_bot_token()
-        signing_secret = cls.get_signing_secret()
-        
-        if not bot_token:
-            raise ValueError("BOT_TOKEN is required but not configured")
-        if not cls.PRODUCTION and not signing_secret:
-            raise ValueError("SIGNING_SECRET is required but not configured")
-        
-        # App token only required in sandbox mode
-        if cls.PRODUCTION and not cls.get_app_token():
-            raise ValueError("S_APP_TOKEN is required for Socket Mode in sandbox")
-        
-        return True
 
 # Initialize tokens and context at module level
 BOT_TOKEN = Config.get_bot_token()

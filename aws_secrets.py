@@ -15,7 +15,7 @@ def get_secret_string(secret_name):
         str or None: Secret value or None if retrieval fails
     """
     
-    client = boto3.client('secretsmanager')
+    client = boto3.client('secretsmanager', region_name='us-west-2')  
     try:
         resp = client.get_secret_value(SecretId=secret_name)
         
@@ -23,7 +23,6 @@ def get_secret_string(secret_name):
             secret_string = eval(resp['SecretString'])
             for key in secret_string:
                 return secret_string[key]
-            #return resp['SecretString']
         else:
             logging.error(f"Secret {secret_name} does not contain SecretString")
             return None
