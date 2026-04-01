@@ -2,7 +2,6 @@
 
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
-from slack_bolt.adapter.aws_lambda import SlackRequestHandler
 from slack_sdk.web import WebClient
 #import logging
 #logging.basicConfig(level=logging.INFO)
