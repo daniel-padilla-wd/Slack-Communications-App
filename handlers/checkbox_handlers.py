@@ -9,6 +9,7 @@ def register_checkbox_handlers(app):
     
     @app.action("customize_sender_identity-action")
     def handle_customize_sender_id_checkbox(ack, client, body, logger):
+        """Update modal blocks when sender customization is toggled."""
         ack()        
         logger.info(f"Payload recieved:\n{body}")
         customize_sender_identity_selected = bool(body["actions"][0]["selected_options"])
@@ -65,6 +66,7 @@ def register_checkbox_handlers(app):
 
     @app.action("call_to_action-action")
     def handle_call_to_action_checkbox(ack, body, client, logger):
+        """Update modal blocks when call-to-action support is toggled."""
         ack()
         logger.info(f"Payload recieved:\n{body}")
         call_to_action_selected = bool(body["actions"][0]["selected_options"])

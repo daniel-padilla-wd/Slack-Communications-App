@@ -12,6 +12,7 @@ def register_modal_handlers(app):
     allowed_user_ids = set(Config.ALLOWED_SHORTCUT_USER_IDS)
 
     def authorize_shortcut_user(ack, body, client, logger, next):
+        """Authorize shortcut access in production or show an access-denied modal."""
         if not Config.PRODUCTION:
             next()
             return
@@ -51,6 +52,7 @@ def register_modal_handlers(app):
     
     @app.shortcut("bt_comms_shortcut", middleware=[authorize_shortcut_user])
     def open_modal(ack, body, client, logger, shortcut):
+        """Open the initial communications modal for the global shortcut."""
         ack()
         logger.info(f"Payload recieved:\n{body}")
         modal_view = compose_modal_blocks()

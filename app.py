@@ -1,3 +1,5 @@
+"""Bootstrap and start the Slack Bolt application."""
+
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from slack_bolt.adapter.aws_lambda import SlackRequestHandler

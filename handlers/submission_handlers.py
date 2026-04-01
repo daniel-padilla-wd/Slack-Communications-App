@@ -6,6 +6,7 @@ import logging
 from services import generate_cta_button_elements, customize_sender_identity_state, send_message_to_conversation
 
 def validate_icon_url(ack, view_state: dict) -> bool:
+    """Validate optional icon URL input and return an ack error when invalid."""
     logging.info(f"Validating icon URL with view state:\n{view_state}")
     try:
         if not view_state.get("icon_url"):
@@ -25,6 +26,7 @@ def validate_icon_url(ack, view_state: dict) -> bool:
     return True
 
 def validate_cta_button_links(ack, view_state: dict) -> bool:
+    """Validate CTA links when CTA options are enabled in the submitted view."""
     try: 
         if not view_state.get("call_to_action"):
             return True  # No CTA buttons selected, so no validation needed
@@ -58,6 +60,7 @@ def register_submission_handlers(app):
     
     @app.view("initial_view")
     def handle_comms_submission_event(ack, body, client, logger, view):
+        """Validate the submitted modal state and send messages to each selected conversation."""
         logger.info(f"Payload recieved:\n{body}")
         # rich_text_input_value: str = view["state"]["values"]["rich_text_input"]["rich_text_input-action"]["rich_text_value"]
         try:

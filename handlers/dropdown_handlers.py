@@ -9,6 +9,7 @@ def register_dropdown_handlers(app):
     
     @app.action("call_to_action_dropdown-action")
     def handle_call_to_action_dropdown_action(ack, client, body, logger):
+        """Update modal blocks based on selected CTA button count."""
         ack()
         logger.info(f"Payload recieved:\n{body}")
         # call_to_action_dropdown_selected = body["actions"][0]["selected_option"]
