@@ -2,8 +2,6 @@ import boto3
 from botocore.exceptions import ClientError
 import logging
 
-logging.basicConfig(level=logging.INFO)
-
 def get_secret_string(secret_name):
     """
     Retrieve plain string value from AWS Secrets Manager.
