@@ -114,7 +114,6 @@ From `requirements.txt`:
 - `certifi`
 - `validators`
 - `boto3`
-- `flask`
 
 ## Local Setup
 

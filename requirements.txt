@@ -1,11 +1,6 @@
-#slack-cli-hooks
-#pytest
-#flake8
-#black
 slack_bolt
 slack_sdk
 python-dotenv
 certifi
 validators
 boto3
-flask
