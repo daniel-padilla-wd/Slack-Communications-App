@@ -61,7 +61,7 @@ def customize_sender_identity_state(view):
         except:
             sender_name_value = None
         try:
-            icon_url_value = view["state"]["values"].get("icon_url").get("icon_url_input-action").get("value")
+            icon_url_value = view["state"]["values"].get("icon_url").get("icon_url-action").get("value")
         except:
             icon_url_value = None
         return {"sender_name": sender_name_value, "icon_url": icon_url_value}
