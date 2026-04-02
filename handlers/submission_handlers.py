@@ -39,9 +39,11 @@ def validate_cta_button_links(ack, view_state: dict) -> bool:
             })
             return
         
-        number_of_buttons_selected: int = len(view_state["call_to_action_dropdown"]["call_to_action_dropdown-action"]["selected_option"]["value"])
+        number_of_buttons_selected: int = int(view_state["call_to_action_dropdown"]["call_to_action_dropdown-action"]["selected_option"]["value"])
+        logging.info(f"Number of CTA buttons selected: {number_of_buttons_selected}")
         for i in range(number_of_buttons_selected):
             button_link_value = view_state[f"cta_button_link_{i+1}"]["cta_button_link_input-action"]["value"].strip()
+            logging.info(f"Validating CTA button link: {button_link_value}")
             if not validators.url(button_link_value):
                 # If validation fails, return an error payload
                 ack(response_action="errors", errors={
