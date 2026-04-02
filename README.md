@@ -77,6 +77,35 @@ Runtime entry points:
 
 ## Request Flow
 
+## Compose Modal Flow
+
+```mermaid
+flowchart TD
+A[User runs global shortcut] --> B[App opens compose modal]
+B --> C[User enters message]
+C --> D[User selects one or more conversations]
+D --> E{Optional settings enabled?}
+E -->|No| I[Submit modal]
+E -->|Yes: custom sender| F[Add sender name/icon fields]
+E -->|Yes: CTA buttons| G[Select CTA count 1-3]
+G --> H[Add CTA text + URL fields]
+F --> I
+H --> I
+
+I --> J[Submission validation]
+J --> K{Valid input?}
+K -->|No| L[Show inline error in modal]
+L --> B
+K -->|Yes| M[Loop through selected conversations]
+M --> N[Post message to conversation]
+N --> O{Post success?}
+O -->|Yes| P[Continue to next conversation]
+O -->|No| Q[Send warning/feedback to requester]
+P --> R{More conversations?}
+R -->|Yes| M
+R -->|No| S[Done]
+```
+
 1. User triggers global shortcut `bt_comms_shortcut`.
 2. If production mode is enabled, middleware validates user ID against `ALLOWED_SHORTCUT_USER_IDS`.
 3. App opens modal with callback ID `initial_view`.
@@ -187,3 +216,83 @@ These are based on current source behavior:
 
 - URL validation errors on submit:
     - Ensure links include `http://` or `https://`.
+
+## Efficient Message Payload Construction
+
+### Principles of Efficient Payload Design
+
+Efficient message payload construction is essential for Slack integrations that need to post to multiple channels or users. The goal is to minimize latency, reduce API errors, and ensure messages are both informative and visually engaging. This is achieved by leveraging Slack's Block Kit for rich formatting, dynamically assembling payloads based on user input, and optimizing data enrichment to avoid unnecessary processing.
+
+In this app, those principles show up in a practical way: Block Kit templates define the structure, conditional logic controls what gets included, and validation gates prevent malformed payloads from reaching the Slack API.
+
+### Dynamic and Modular Payload Assembly
+
+To handle diverse posting scenarios, construct payloads dynamically:
+
+- Use templates for common message structures such as headers, sections, and fields, then fill them with context-specific data at runtime.
+- Incorporate conditional logic to include or exclude blocks based on the workflow's needs.
+- For multi-channel posting, generate payloads in a loop, customizing each for its target conversation and aggregating results for error handling and reporting.
+
+In this app, `blocks/__init__.py` defines reusable templates for common structures: `initial_view_blocks` (message + conversation selector, [line 18](blocks/__init__.py#L18)), `sender_identity_fields`, `advanced_options_blocks` (opt-in toggles, [line 55](blocks/__init__.py#L55)), and `cta_buttons` (call-to-action button groups).
+
+- The `compose_modal_blocks()` function ([line 299](blocks/__init__.py#L299)) assembles these templates conditionally, so sender fields or CTA dropdowns appear only when needed.
+
+- The `generate_cta_buttons()` function ([line 272](blocks/__init__.py#L272)) uses `copy.deepcopy()` ([line 284](blocks/__init__.py#L284)) to create uniquely identified copies of a CTA button template at runtime, which avoids code duplication while scaling from 1 to 3 buttons.
+
+- At submission time, `handle_comms_submission_event()` ([line 64](handlers/submission_handlers.py#L64)) loops through each selected conversation and calls `send_message_to_conversation()` once per destination.
+
+### Leveraging Block Kit for Rich Formatting
+
+Slack's Block Kit enables advanced message layouts:
+
+- Design messages visually using the [Block Kit Builder](https://app.slack.com/block-kit-builder), then export the JSON for use in your app.
+- Populate blocks with dynamic data such as names, links, or workflow-specific details.
+- Use sections, dividers, and context blocks to organize information clearly and improve readability.
+
+In this app, the message field uses Slack's `rich_text_input` element ([line 22](blocks/__init__.py#L22)), which allows users to compose formatted content directly in the modal.
+
+- Optional sections are separated by dividers and grouped under checkboxes that control their visibility ([line 55](blocks/__init__.py#L55)).
+
+- CTA buttons are rendered as action blocks with `url` fields, and the final button elements are assembled in `generate_cta_button_elements()` ([services/__init__.py, line 6](services/__init__.py#L6)).
+
+### Optimizing for Performance and Scalability
+
+When posting to many channels or users:
+
+- Batch API calls where possible, but respect Slack's rate limits to avoid throttling.
+- Cache reusable data when repeated lookups are expensive.
+- Validate and sanitize all dynamic content before sending to prevent malformed payloads and user-facing errors.
+
+In this app:
+
+- `validate_icon_url()` ([line 8](handlers/submission_handlers.py#L8)) and `validate_cta_button_links()` ([line 28](handlers/submission_handlers.py#L28)) check user input before `ack()` is called, rejecting invalid payloads immediately with inline modal errors.
+
+- The posting loop in `handle_comms_submission_event()` ([line 64](handlers/submission_handlers.py#L64)) sends messages to each selected conversation sequentially, which naturally respects Slack's rate limits.
+
+- Sender identity is extracted once per submission via `customize_sender_identity_state()` ([services/__init__.py, line 47](services/__init__.py#L47)), not recalculated per conversation.
+
+- If posting fails for one conversation, `send_message_to_conversation()` ([services/__init__.py, line 71](services/__init__.py#L71)) sends a warning DM to the requester so the rest of the batch can still succeed.
+
+### Best Practices for Maintainability
+
+- Centralize payload templates and helper functions to simplify updates and ensure consistency.
+- Log payloads and responses for troubleshooting and continuous improvement.
+- Regularly review Slack API updates to maintain compatibility and take advantage of new features.
+
+In this app, Block Kit JSON is centralized in `blocks/__init__.py`, so most layout or label changes are isolated to a single file. Helper functions also keep responsibilities narrow:
+
+- `generate_cta_buttons()` generates CTA input groups for the modal form.
+- `customize_sender_identity_state()` extracts sender name and icon URL from submitted view state.
+- `generate_cta_button_elements()` builds final CTA button action blocks for the outbound payload.
+
+Validation errors use `response_action="errors"` for inline modal feedback ([line 8](handlers/submission_handlers.py#L8)), while post-send failures use DMs ([services/__init__.py, line 71](services/__init__.py#L71)), which keeps user-facing behavior predictable and consistent.
+
+### Future Improvements
+
+- **Input validation breadth:** The `validators.url()` library ([lines 8–27](handlers/submission_handlers.py#L8)) works well for format checks. Consider adding allowed-domain restrictions if security policies require vetting external links in CTA buttons.
+- **Decouple presentation from logic:** Consider extracting message payload construction into a dedicated builder function to improve testability and separation of concerns.
+- **Structured logging:** Adding correlation tags or request IDs to multi-channel send operations would improve traceability across logs during incident response.
+
+Efficient payload construction not only improves performance but also enhances the user experience by delivering timely, relevant, and well-formatted messages across Slack workspaces.
+
+> **Maintainability note:** Code references in this section use line numbers tied to the current source state. If files are significantly refactored, update these references to keep the documentation accurate.
